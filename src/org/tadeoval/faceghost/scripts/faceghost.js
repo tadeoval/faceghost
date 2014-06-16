@@ -30,6 +30,8 @@ var fs = require('fs');
 
 var cookiesFile = casper.cli.get('cookies-file');
 var folder = casper.cli.get('folder');
+var username;
+var password;
 var url;
 
 if (!casper.cli.has(0)) {
@@ -37,6 +39,20 @@ if (!casper.cli.has(0)) {
 	usage();
 } else {
 	url = casper.cli.get(0);
+}
+
+if (!casper.cli.has('username')) {
+	casper.echo("You must provide a username");
+	usage();
+} else {
+	username = casper.cli.get('username');
+}
+
+if (!casper.cli.has('password')) {
+	casper.echo("You must provide your FB password, it is not stored nor sent anywhere besides FB :)");
+	usage();
+} else {
+	password = casper.cli.get('password');
 }
 
 // If no folder is specified, use current directory
@@ -67,10 +83,10 @@ if (cookiesData) {
 }
 
 function usage(){
-	casper.echo('e.g. \n$casperjs faceghost.js "https://www.facebook.com/media/set/?set=<identifier>"');
+	casper.echo('e.g. \n$casperjs faceghost.js "https://www.facebook.com/media/set/?set=<identifier>" --username=email --password=mypass');
 	casper.echo('Options that can be used:');
-	casper.echo('--folder=path/to/folder		Used to specify a directory to store the pictures');
-	casper.echo('--cookies-file=path/to/file	Used to specify a cookies file, dafaults to "cookies.txt" in the current directory');
+	casper.echo('--folder=path/to/folder      Used to specify a directory to store the pictures');
+	casper.echo('--cookies-file=path/to/file  Used to specify a cookies file, dafaults to "cookies.txt" in the current directory');
 	casper.exit();
 }
 
@@ -88,8 +104,8 @@ casper.thenOpen('https://facebook.com', function() {
 		this.echo('Accesed FB, now logging in...');
 		this.click('input[name="persistent"]');
 		this.fill('#login_form', {
-			'email': config.FB.name,
-			'pass' : config.FB.password
+			'email': username,
+			'pass' : password
 		},true);
 	}
 });
@@ -122,7 +138,7 @@ function savePic(){
 		var name = imgSrc.substring(imgSrc.lastIndexOf('/')+1);
 
 		if (pics.indexOf(name) < 0) {
-			this.echo('Saving a pic...');
+			this.echo('Downloading...');
 			this.download(imgSrc, folder + name);
 			pics.push(name);
 			this.echo('Saved pic #' + pics.length);
@@ -132,7 +148,7 @@ function savePic(){
 			var cookies = JSON.stringify(phantom.cookies);
 			fs.write("cookies.txt", cookies, 644);
 			var time = Date.now() - starttime;
-			this.echo('Done in: ' + (time/1000) + ' segs.');
+			this.echo('Done in: ' + (time/1000) + ' secs.');
 			this.exit();
 		}
 	});
